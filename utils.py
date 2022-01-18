@@ -88,7 +88,7 @@ def load_demonstrations(demo_dir, env_name):
 def load_environment(env_name):
   """Outputs a wrapped gym environment."""
   environment = gym.make(env_name)
-  environment = TimeLimit(environment, max_episode_steps=1000)
+  environment = TimeLimit(environment, max_episode_steps=200)
   environment = wrappers.gym_wrapper.GymWrapper(environment)
   environment = wrappers.SinglePrecisionWrapper(environment)
   return environment

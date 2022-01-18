@@ -22,6 +22,8 @@ from acme.utils import counting
 from acme.utils import loggers
 import dm_env
 
+import matplotlib.pyplot as plt
+
 
 class TrainEnvironmentLoop(acme.core.Worker):
   """PWIL environment loop.
@@ -45,21 +47,33 @@ class TrainEnvironmentLoop(acme.core.Worker):
       actor,
       rewarder,
       counter=None,
-      logger=None
+      logger=None,
+      workdir=None
   ):
     self._environment = environment
     self._actor = actor
     self._rewarder = rewarder
     self._counter = counter or counting.Counter()
     self._logger = logger or loggers.make_default_logger()
+    self._workdir = workdir
+    self._logdir = self._logger._file.name.split('/logs/')[0]
+    self._zone_logfile_train = open(self._logdir + "/train_max_zone.txt", "w")
 
-  def run(self, num_steps):
+  def run(self, num_steps, it):
     """Perform the run loop.
 
     Args:
       num_steps: number of steps to run the loop for.
     """
     current_steps = 0
+
+    # fig = plt.figure()
+    # ax = fig.add_subplot()
+    # self._environment.draw(ax, paths=False)
+
+    max_zone = 1
+
+    trajectories = []
     while current_steps < num_steps:
 
       # Reset any counts and start the environment.
@@ -73,10 +87,14 @@ class TrainEnvironmentLoop(acme.core.Worker):
 
       self._actor.observe_first(timestep)
 
+      # trajectory = []
+
       # Run an episode.
       while not timestep.last():
         action = self._actor.select_action(timestep.observation)
         obs_act = {'observation': timestep.observation, 'action': action}
+        # print("obs_act = ",obs_act)
+        trajectory.append(obs_act)
         imitation_reward = self._rewarder.compute_reward(obs_act)
         timestep = self._environment.step(action)
         imitation_timestep = dm_env.TimeStep(step_type=timestep.step_type,
@@ -84,6 +102,11 @@ class TrainEnvironmentLoop(acme.core.Worker):
                                              discount=timestep.discount,
                                              observation=timestep.observation)
 
+        new_zone = self._eval_zone(timestep.observation)
+        if new_zone > max_zone:
+            max_zone = new_zone
+
+        # print("imitation_timestep = ", imitation_timestep)
         self._actor.observe(action, next_timestep=imitation_timestep)
         self._actor.update()
 
@@ -91,6 +114,24 @@ class TrainEnvironmentLoop(acme.core.Worker):
         episode_steps += 1
         episode_return += timestep.reward
         episode_imitation_return += imitation_reward
+
+      # print("max_zone = ", max_zone)
+
+      # trajectories.append(trajectory)
+      # ## save visual logs
+      # if current_steps % 1000 == 0 and current_steps != 0:
+      #     ## save current max zone
+      #     self._zone_logfile_train.write(str(max_zone) + "\n")
+      #     for traj in trajectories:
+      #         X = [obs_act["observation"][0] for obs_act in traj]
+      #         Y = [obs_act["observation"][1] for obs_act in traj]
+      #         ax.plot(X,Y,color="pink",alpha=0.6)
+      #     trajectories = []
+      #     plt.savefig(self._logdir + "/train_" + str(it) + "_" + str(current_steps) + ".png")
+      #     plt.close(fig)
+      #     fig = plt.figure()
+      #     ax = fig.add_subplot()
+      #     self._environment.draw(ax, paths=False)
 
       # Collect the results and combine with counts.
       counts = self._counter.increment(episodes=1, steps=episode_steps)
@@ -105,6 +146,67 @@ class TrainEnvironmentLoop(acme.core.Worker):
 
       self._logger.write(result)
       current_steps += episode_steps
+
+    # plt.savefig(self._logdir + "/train_" + str(it) + "_" + str(current_steps) + ".png")
+    # plt.close(fig)
+
+  def _eval_zone(self, state):
+    x = state[0]
+    y = state[1]
+    if y < 1.:
+      if x < 1.:
+        return 1
+      elif  x < 2.:
+        return 2
+      elif  x < 3.:
+        return 3
+      elif  x < 4.:
+        return 4
+      else:
+        return 5
+    elif y < 2.:
+      if  x > 4.:
+        return 6
+      elif  x > 3.:
+        return 7
+      elif x > 2.:
+        return 8
+      else:
+        return 11
+    elif y < 3.:
+      if x < 1.:
+        return 11
+      elif x < 2.:
+        return 10
+      elif x < 3.:
+        return 9
+      elif x < 4.:
+        return 20
+      else :
+        return 21
+
+    elif y < 4.:
+      if x < 1.:
+        return 12
+      elif x < 2.:
+        return 15
+      elif x < 3.:
+        return 16
+      elif x < 4:
+        return 19
+      else :
+        return 22
+    else:
+      if x < 1.:
+        return 13
+      elif x < 2.:
+        return 14
+      elif x < 3.:
+        return 17
+      elif x < 4:
+        return 18
+      else :
+        return 23
 
 
 class EvalEnvironmentLoop(acme.core.Worker):
@@ -130,21 +232,31 @@ class EvalEnvironmentLoop(acme.core.Worker):
       actor,
       rewarder,
       counter=None,
-      logger=None
+      logger=None,
+      workdir=None
   ):
     self._environment = environment
     self._actor = actor
     self._rewarder = rewarder
     self._counter = counter or counting.Counter()
     self._logger = logger or loggers.make_default_logger()
+    self._workdir = workdir
+    self._logdir = self._logger._file.name.split('/logs/')[0]
+    self._zone_logfile_eval = open(self._logdir + "/eval_max_zone.txt", "w")
 
-  def run(self, num_episodes):
+  def run(self, num_episodes,it):
     """Perform the run loop.
 
     Args:
       num_episodes: number of episodes to run the loop for.
     """
-    for _ in range(num_episodes):
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    self._environment.draw(ax, paths=False)
+
+    max_zone = 1
+
+    for i_episode in range(num_episodes):
       # Reset any counts and start the environment.
       start_time = time.time()
       self._rewarder.reset()
@@ -164,10 +276,21 @@ class EvalEnvironmentLoop(acme.core.Worker):
 
         timestep = self._environment.step(action)
 
+        new_zone = self._eval_zone(timestep.observation)
+        if new_zone > max_zone:
+            max_zone = new_zone
+
+        self._zone_logfile_eval.write(str(max_zone) + "\n")
+
         # Book-keeping.
         episode_steps += 1
         episode_return += timestep.reward
         episode_imitation_return += imitation_reward
+
+      ## save visual logs
+      X = [obs_act["observation"][0] for obs_act in trajectory]
+      Y = [obs_act["observation"][1] for obs_act in trajectory]
+      ax.plot(X,Y,color="pink",alpha=0.6)
 
       counts = self._counter.increment(episodes=1, steps=episode_steps)
       w2_dist = self._rewarder.compute_w2_dist_to_expert(trajectory)
@@ -184,3 +307,65 @@ class EvalEnvironmentLoop(acme.core.Worker):
       result.update(counts)
 
       self._logger.write(result)
+
+    plt.savefig(self._logdir + "/eval_" + str(it) +  ".png")
+    plt.close(fig)
+
+
+  def _eval_zone(self, state):
+    x = state[0]
+    y = state[1]
+    if y < 1.:
+      if x < 1.:
+        return 1
+      elif  x < 2.:
+        return 2
+      elif  x < 3.:
+        return 3
+      elif  x < 4.:
+        return 4
+      else:
+        return 5
+    elif y < 2.:
+      if  x > 4.:
+        return 6
+      elif  x > 3.:
+        return 7
+      elif x > 2.:
+        return 8
+      else:
+        return 11
+    elif y < 3.:
+      if x < 1.:
+        return 11
+      elif x < 2.:
+        return 10
+      elif x < 3.:
+        return 9
+      elif x < 4.:
+        return 20
+      else :
+        return 21
+
+    elif y < 4.:
+      if x < 1.:
+        return 12
+      elif x < 2.:
+        return 15
+      elif x < 3.:
+        return 16
+      elif x < 4:
+        return 19
+      else :
+        return 22
+    else:
+      if x < 1.:
+        return 13
+      elif x < 2.:
+        return 14
+      elif x < 3.:
+        return 17
+      elif x < 4:
+        return 18
+      else :
+        return 23

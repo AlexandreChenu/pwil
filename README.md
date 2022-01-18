@@ -26,3 +26,9 @@ PWIL demonstrations are available in a GCS bucket.
 
     python -m pwil.trainer --workdir='/tmp/pwil' --env_name='Hopper-v2' --demo_dir=$DEMO_DIR
 
+
+
+TODO: export path to python3.7 lib:
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/isir_alex/anaconda3/envs/pwil/lib/
+
+

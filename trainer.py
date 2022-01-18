@@ -27,6 +27,7 @@ from pwil import imitation_loop
 from pwil import rewarder
 from pwil import utils
 
+from pwil.envs import *
 
 flags.DEFINE_string('workdir', None, 'Logging directory')
 flags.DEFINE_string('env_name', None, 'Environment name.')
@@ -103,20 +104,22 @@ def main(_):
   # Define train/eval loops.
 
   train_logger = csv_logger.CSVLogger(
-      directory=FLAGS.workdir, label='train_logs')
+      directory_or_file=FLAGS.workdir, label='train_logs')
   eval_logger = csv_logger.CSVLogger(
-      directory=FLAGS.workdir, label='eval_logs')
+      directory_or_file=FLAGS.workdir, label='eval_logs')
 
 
   train_loop = imitation_loop.TrainEnvironmentLoop(
-      environment, agent, pwil_rewarder, logger=train_logger)
+      environment, agent, pwil_rewarder, logger=train_logger, workdir=FLAGS.workdir)
 
   eval_loop = imitation_loop.EvalEnvironmentLoop(
-      environment, eval_agent, pwil_rewarder, logger=eval_logger)
+      environment, eval_agent, pwil_rewarder, logger=eval_logger, workdir=FLAGS.workdir)
 
-  for _ in range(FLAGS.num_iterations):
-    train_loop.run(num_steps=FLAGS.num_steps_per_iteration)
-    eval_loop.run(num_episodes=FLAGS.num_eval_episodes)
+  for it in range(FLAGS.num_iterations):
+    print("train")
+    train_loop.run(num_steps=FLAGS.num_steps_per_iteration, it=it)
+    print("eval")
+    eval_loop.run(num_episodes=FLAGS.num_eval_episodes,it=it)
 
 if __name__ == '__main__':
   app.run(main)

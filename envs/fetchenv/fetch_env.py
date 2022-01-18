@@ -824,7 +824,7 @@ class MyComplexFetchEnv:
 
     def reset(self) -> np.ndarray:
         self.env.reset()
-        return self.env._get_state()
+        return self.get_state()
 
     def get_restore(self):
         return (
