@@ -5,7 +5,7 @@ import numpy as np
 L_demo = []
 for i in range(1,3):
 
-    with open('./demonstrations/dubins/' + str(1) + '.demo', 'rb') as handle:
+    with open('./demonstrations/dubins/' + str(i) + '.demo', 'rb') as handle:
         demo = pickle.load(handle)
 
     print("demo = ", demo)

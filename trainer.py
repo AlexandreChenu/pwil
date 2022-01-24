@@ -34,20 +34,20 @@ flags.DEFINE_string('env_name', None, 'Environment name.')
 flags.DEFINE_string('demo_dir', None, 'Directory of expert demonstrations.')
 flags.DEFINE_boolean('state_only', False,
                      'Use only state for reward computation')
-flags.DEFINE_float('sigma', 0.2, 'Exploration noise.')
+flags.DEFINE_float('sigma', 0.1, 'Exploration noise.')
 flags.DEFINE_integer('num_transitions_rb', 50000,
                      'Number of transitions to fill the rb with.')
 flags.DEFINE_integer('num_demonstrations', 1, 'Number of expert episodes.')
-flags.DEFINE_integer('subsampling', 20, 'Subsampling factor of demonstrations.')
-flags.DEFINE_integer('random_seed', 1, 'Experiment random seed.')
+flags.DEFINE_integer('subsampling', 2, 'Subsampling factor of demonstrations.')
+flags.DEFINE_integer('random_seed', 0, 'Experiment random seed.')
 flags.DEFINE_integer('num_steps_per_iteration', 10000,
                      'Number of training steps per iteration.')
 flags.DEFINE_integer('num_iterations', 100, 'Number of iterations.')
 flags.DEFINE_integer('num_eval_episodes', 10, 'Number of evaluation episodes.')
 flags.DEFINE_integer('samples_per_insert', 256, 'Controls update frequency.')
-flags.DEFINE_float('policy_learning_rate', 1e-4,
+flags.DEFINE_float('policy_learning_rate', 1e-5,
                    'Larning rate for policy updates')
-flags.DEFINE_float('critic_learning_rate', 1e-4,
+flags.DEFINE_float('critic_learning_rate', 1e-5,
                    'Larning rate for critic updates')
 
 FLAGS = flags.FLAGS
