@@ -67,13 +67,13 @@ class TrainEnvironmentLoop(acme.core.Worker):
     """
     current_steps = 0
 
-    fig = plt.figure()
-    ax = fig.add_subplot()
-    self._environment.draw(ax, paths=False)
+    # fig = plt.figure()
+    # ax = fig.add_subplot()
+    # self._environment.draw(ax, paths=False)
 
     max_zone = 1
 
-    trajectories = []
+    # trajectories = []
 
     cnt_steps = 0
 
@@ -90,14 +90,14 @@ class TrainEnvironmentLoop(acme.core.Worker):
 
       self._actor.observe_first(timestep)
 
-      trajectory = []
+      # trajectory = []
 
       # Run an episode.
       while not timestep.last():
         action = self._actor.select_action(timestep.observation)
         obs_act = {'observation': timestep.observation, 'action': action}
         # print("obs_act = ",obs_act)
-        trajectory.append(obs_act)
+        # trajectory.append(obs_act)
         imitation_reward = self._rewarder.compute_reward(obs_act)
         timestep = self._environment.step(action)
         imitation_timestep = dm_env.TimeStep(step_type=timestep.step_type,
@@ -120,23 +120,23 @@ class TrainEnvironmentLoop(acme.core.Worker):
         cnt_steps += 1
       # print("max_zone = ", max_zone)
 
-      trajectories.append(trajectory)
-      ## save visual logs
-      if cnt_steps > 1000 :
-          ## save current max zone
-          self._zone_logfile_train.write(str(max_zone) + "\n")
-          for traj in trajectories:
-              X = [obs_act["observation"][0] for obs_act in traj]
-              Y = [obs_act["observation"][1] for obs_act in traj]
-              ax.plot(X,Y,color="pink",alpha=0.6)
-          trajectories = []
-          plt.savefig(self._logdir + "/train_" + str(it) + "_" + str(current_steps) + ".png")
-          plt.close(fig)
-
-          cnt_steps = 0
-          fig = plt.figure()
-          ax = fig.add_subplot()
-          self._environment.draw(ax, paths=False)
+      # trajectories.append(trajectory)
+      # ## save visual logs
+      # if cnt_steps > 1000 :
+      #     ## save current max zone
+      #     self._zone_logfile_train.write(str(max_zone) + "\n")
+      #     for traj in trajectories:
+      #         X = [obs_act["observation"][0] for obs_act in traj]
+      #         Y = [obs_act["observation"][1] for obs_act in traj]
+      #         ax.plot(X,Y,color="pink",alpha=0.6)
+      #     trajectories = []
+      #     plt.savefig(self._logdir + "/train_" + str(it) + "_" + str(current_steps) + ".png")
+      #     plt.close(fig)
+      #
+      #     cnt_steps = 0
+      #     fig = plt.figure()
+      #     ax = fig.add_subplot()
+      #     self._environment.draw(ax, paths=False)
 
       # Collect the results and combine with counts.
       counts = self._counter.increment(episodes=1, steps=episode_steps)
