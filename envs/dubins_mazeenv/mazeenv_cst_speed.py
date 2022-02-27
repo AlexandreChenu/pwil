@@ -385,7 +385,7 @@ class DubinsMazeEnv(Maze, gym.Env):
             ax.add_collection(lc)
             print("  ... done")
 
-    def plot_car(self, state, cabcolor="-r", truckcolor="-k"):  # pragma: no cover
+    def plot_car(self, state, ax, alpha, cabcolor="-r", truckcolor="-k"):  # pragma: no cover
         # print("Plotting Car")
         # x = self.pose[0]*MAX_X #self.pose[0]
         # y = self.pose[1]*MAX_Y #self.pose[1]
@@ -445,8 +445,8 @@ class DubinsMazeEnv(Maze, gym.Env):
         # rl_wheel[0, :] += x
         # rl_wheel[1, :] += y
 
-        plt.plot(np.array(outline[0, :]).flatten(),
-        		 np.array(outline[1, :]).flatten(), truckcolor)
+        ax.plot(np.array(outline[0, :]).flatten(),
+        		 np.array(outline[1, :]).flatten(), color=truckcolor, alpha=alpha)
         # plt.plot(np.array(fr_wheel[0, :]).flatten(),
         # 		 np.array(fr_wheel[1, :]).flatten(), truckcolor)
         # plt.plot(np.array(rr_wheel[0, :]).flatten(),

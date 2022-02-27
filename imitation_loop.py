@@ -24,6 +24,10 @@ import dm_env
 
 import matplotlib.pyplot as plt
 
+import seaborn
+seaborn.set()
+seaborn.set_style("whitegrid")
+
 
 class TrainEnvironmentLoop(acme.core.Worker):
   """PWIL environment loop.
@@ -271,6 +275,8 @@ class EvalEnvironmentLoop(acme.core.Worker):
       episode_imitation_return = 0
       timestep = self._environment.reset()
 
+      max_zone = 1
+
       # Run an episode.
       trajectory = []
       while not timestep.last():
@@ -285,17 +291,20 @@ class EvalEnvironmentLoop(acme.core.Worker):
         if new_zone > max_zone:
             max_zone = new_zone
 
-        self._zone_logfile_eval.write(str(max_zone) + "\n")
-
         # Book-keeping.
         episode_steps += 1
         episode_return += timestep.reward
         episode_imitation_return += imitation_reward
 
+      self._zone_logfile_eval.write(str(max_zone) + "\n")
+
       ## save visual logs
       X = [obs_act["observation"][0] for obs_act in trajectory]
       Y = [obs_act["observation"][1] for obs_act in trajectory]
-      ax.plot(X,Y,color="pink",alpha=0.6)
+      ax.plot(X,Y,color="royalblue",alpha=0.7)
+
+      for obs_act in trajectory:
+          self._environment.plot_car(obs_act["observation"], ax, alpha = 0.7, cabcolor="royalblue", truckcolor="royalblue")
 
       counts = self._counter.increment(episodes=1, steps=episode_steps)
       w2_dist = self._rewarder.compute_w2_dist_to_expert(trajectory)
