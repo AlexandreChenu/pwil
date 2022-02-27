@@ -39,7 +39,7 @@ flags.DEFINE_integer('num_transitions_rb', 50000,
                      'Number of transitions to fill the rb with.')
 flags.DEFINE_integer('num_demonstrations', 1, 'Number of expert episodes.')
 flags.DEFINE_integer('subsampling', 2, 'Subsampling factor of demonstrations.')
-flags.DEFINE_integer('random_seed', 0, 'Experiment random seed.')
+flags.DEFINE_integer('random_seed', 39, 'Experiment random seed.')
 flags.DEFINE_integer('num_steps_per_iteration', 10000,
                      'Number of training steps per iteration.')
 flags.DEFINE_integer('num_iterations', 100, 'Number of iterations.')
