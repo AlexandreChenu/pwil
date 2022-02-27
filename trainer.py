@@ -117,9 +117,9 @@ def main(_):
 
   for it in range(FLAGS.num_iterations):
     print("train")
-    train_loop.run(num_steps=FLAGS.num_steps_per_iteration, it=it)
+    train_trajs = train_loop.run(num_steps=FLAGS.num_steps_per_iteration, it=it)
     print("eval")
-    eval_loop.run(num_episodes=FLAGS.num_eval_episodes,it=it)
+    eval_loop.run(num_episodes=FLAGS.num_eval_episodes,it=it, train_trajs = train_trajs)
 
 if __name__ == '__main__':
   app.run(main)
