@@ -27,3 +27,9 @@ register(
     id='FetchEnv-v0',
     entry_point='pwil.envs.fetchenv.fetch_env:MyComplexFetchEnv',
 )
+
+print("REGISTERING HumanoidEnv-v0 ")
+register(
+    id='HumanoidEnv-v0',
+    entry_point='pwil.envs.humanoidenv.humanoidenv:HumanoidEnv',
+)
