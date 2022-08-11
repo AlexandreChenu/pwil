@@ -78,6 +78,7 @@ class TrainEnvironmentLoop(acme.core.Worker):
     max_zone = 1
 
     trajectories = []
+    trajectories_pos = []
 
     cnt_steps = 0
 
@@ -92,9 +93,12 @@ class TrainEnvironmentLoop(acme.core.Worker):
       episode_imitation_return = 0
       timestep = self._environment.reset()
 
+      pos = self._environment.sim.data.qpos.flat.copy()
+
       self._actor.observe_first(timestep)
 
       trajectory = []
+      trajectory_pos = []
 
       # Run an episode.
       while not timestep.last():
@@ -102,14 +106,17 @@ class TrainEnvironmentLoop(acme.core.Worker):
         obs_act = {'observation': timestep.observation, 'action': action}
         # print("obs_act = ",obs_act)
         trajectory.append(obs_act)
+        trajectory_pos.append(pos)
         imitation_reward = self._rewarder.compute_reward(obs_act)
         timestep = self._environment.step(action)
+        pos = self._environment.sim.data.qpos.flat.copy()
         imitation_timestep = dm_env.TimeStep(step_type=timestep.step_type,
                                              reward=imitation_reward,
                                              discount=timestep.discount,
                                              observation=timestep.observation)
 
-        new_zone = self._eval_zone(timestep.observation)
+        #new_zone = self._eval_zone(timestep.observation)
+        new_zone = 0
         if new_zone > max_zone:
             max_zone = new_zone
 
@@ -125,6 +132,7 @@ class TrainEnvironmentLoop(acme.core.Worker):
       # print("max_zone = ", max_zone)
 
       trajectories.append(trajectory)
+      trajectories_pos.append(trajectory_pos)
       # ## save visual logs
       # if cnt_steps > 1000 :
       #     ## save current max zone
@@ -159,65 +167,65 @@ class TrainEnvironmentLoop(acme.core.Worker):
     # plt.savefig(self._logdir + "/train_" + str(it) + "_" + str(current_steps) + ".png")
     # plt.close(fig)
 
-    return trajectories
+    return trajectories, trajectories_pos
 
-  def _eval_zone(self, state):
-    x = state[0]
-    y = state[1]
-    if y < 1.:
-      if x < 1.:
-        return 1
-      elif  x < 2.:
-        return 2
-      elif  x < 3.:
-        return 3
-      elif  x < 4.:
-        return 4
-      else:
-        return 5
-    elif y < 2.:
-      if  x > 4.:
-        return 6
-      elif  x > 3.:
-        return 7
-      elif x > 2.:
-        return 8
-      else:
-        return 11
-    elif y < 3.:
-      if x < 1.:
-        return 11
-      elif x < 2.:
-        return 10
-      elif x < 3.:
-        return 9
-      elif x < 4.:
-        return 20
-      else :
-        return 21
+  # def _eval_zone(self, state):
+  #   x = state[0]
+  #   y = state[1]
+  #   if y < 1.:
+  #     if x < 1.:
+  #       return 1
+  #     elif  x < 2.:
+  #       return 2
+  #     elif  x < 3.:
+  #       return 3
+  #     elif  x < 4.:
+  #       return 4
+  #     else:
+  #       return 5
+  #   elif y < 2.:
+  #     if  x > 4.:
+  #       return 6
+  #     elif  x > 3.:
+  #       return 7
+  #     elif x > 2.:
+  #       return 8
+  #     else:
+  #       return 11
+  #   elif y < 3.:
+  #     if x < 1.:
+  #       return 11
+  #     elif x < 2.:
+  #       return 10
+  #     elif x < 3.:
+  #       return 9
+  #     elif x < 4.:
+  #       return 20
+  #     else :
+  #       return 21
 
-    elif y < 4.:
-      if x < 1.:
-        return 12
-      elif x < 2.:
-        return 15
-      elif x < 3.:
-        return 16
-      elif x < 4:
-        return 19
-      else :
-        return 22
-    else:
-      if x < 1.:
-        return 13
-      elif x < 2.:
-        return 14
-      elif x < 3.:
-        return 17
-      elif x < 4:
-        return 18
-      else :
-        return 23
+  #   elif y < 4.:
+  #     if x < 1.:
+  #       return 12
+  #     elif x < 2.:
+  #       return 15
+  #     elif x < 3.:
+  #       return 16
+  #     elif x < 4:
+  #       return 19
+  #     else :
+  #       return 22
+  #   else:
+  #     if x < 1.:
+  #       return 13
+  #     elif x < 2.:
+  #       return 14
+  #     elif x < 3.:
+  #       return 17
+  #     elif x < 4:
+  #       return 18
+  #     else :
+  #       return 23
 
 
 class EvalEnvironmentLoop(acme.core.Worker):
@@ -255,15 +263,15 @@ class EvalEnvironmentLoop(acme.core.Worker):
     self._logdir = self._logger._file.name.split('/logs/')[0]
     self._zone_logfile_eval = open(self._logdir + "/eval_max_zone.txt", "w")
 
-  def run(self, num_episodes,it, train_trajs = []):
+  def run(self, num_episodes,it, train_trajs = [], train_trajs_pos = []):
     """Perform the run loop.
 
     Args:
       num_episodes: number of episodes to run the loop for.
     """
     fig = plt.figure()
-    ax = fig.add_subplot()
-    self._environment.draw(ax, paths=False)
+    ax = fig.add_subplot(projection='3d')
+    #self._environment.draw(ax, paths=False)
 
     max_zone = 1
 
@@ -276,22 +284,26 @@ class EvalEnvironmentLoop(acme.core.Worker):
       episode_return = 0
       episode_imitation_return = 0
       timestep = self._environment.reset()
-
+      pos = self._environment.sim.data.qpos.flat.copy()
       max_zone = 1
 
       # Run an episode.
       trajectory = []
+      trajectory_pos = []
       while not timestep.last():
         action = self._actor.select_action(timestep.observation)
         obs_act = {'observation': timestep.observation, 'action': action}
         trajectory.append(obs_act)
+        trajectory_pos.append(pos)
         imitation_reward = self._rewarder.compute_reward(obs_act)
 
         timestep = self._environment.step(action)
+        pos = self._environment.sim.data.qpos.flat.copy()
 
-        new_zone = self._eval_zone(timestep.observation)
+        #new_zone = self._eval_zone(timestep.observation)
+        new_zone = 0
         if new_zone > max_zone:
-            max_zone = new_zone
+            max_zone = 0
 
         # Book-keeping.
         episode_steps += 1
@@ -301,17 +313,19 @@ class EvalEnvironmentLoop(acme.core.Worker):
       self._zone_logfile_eval.write(str(max_zone) + "\n")
 
       for train_traj in train_trajs:
-          X = [obs_act["observation"][0] for obs_act in train_traj]
-          Y = [obs_act["observation"][1] for obs_act in train_traj]
-          ax.plot(X,Y,color="lightsteelblue",alpha=0.6)
+        X = [obs_act[0] for obs_act in train_traj_pos]
+        Y = [obs_act[1] for obs_act in train_traj_pos]
+        Z = [obs_act[2] for obs_act in train_traj_pos]
+        ax.plot(X,Y,Z, color="lightsteelblue",alpha=0.6)
 
       ## save visual logs
-      X = [obs_act["observation"][0] for obs_act in trajectory]
-      Y = [obs_act["observation"][1] for obs_act in trajectory]
-      ax.plot(X,Y,color="royalblue",alpha=0.7)
+      X = [obs_act[0] for obs_act in trajectory_pos]
+      Y = [obs_act[1] for obs_act in trajectory_pos]
+      Z = [obs_act[2] for obs_act in trajectory_pos]
+      ax.plot(X,Y,Z, color="royalblue",alpha=0.7)
 
-      for obs_act in trajectory:
-          self._environment.plot_car(obs_act["observation"], ax, alpha = 0.7, cabcolor="royalblue", truckcolor="royalblue")
+      #for obs_act in trajectory:
+          #self._environment.plot_car(obs_act["observation"], ax, alpha = 0.7, cabcolor="royalblue", truckcolor="royalblue")
 
       counts = self._counter.increment(episodes=1, steps=episode_steps)
       w2_dist = self._rewarder.compute_w2_dist_to_expert(trajectory)
@@ -328,65 +342,67 @@ class EvalEnvironmentLoop(acme.core.Worker):
       result.update(counts)
 
       self._logger.write(result)
+      for _azim in range(45, 360, 90):
+        ax.view_init(azim=_azim)
+        plt.savefig(self._logdir + "/eval_" + str(it) + "_" + str(_azim) + ".png")
 
-    plt.savefig(self._logdir + "/eval_" + str(it) +  ".png")
-    plt.close(fig)
+      plt.close(fig)
 
 
-  def _eval_zone(self, state):
-    x = state[0]
-    y = state[1]
-    if y < 1.:
-      if x < 1.:
-        return 1
-      elif  x < 2.:
-        return 2
-      elif  x < 3.:
-        return 3
-      elif  x < 4.:
-        return 4
-      else:
-        return 5
-    elif y < 2.:
-      if  x > 4.:
-        return 6
-      elif  x > 3.:
-        return 7
-      elif x > 2.:
-        return 8
-      else:
-        return 11
-    elif y < 3.:
-      if x < 1.:
-        return 11
-      elif x < 2.:
-        return 10
-      elif x < 3.:
-        return 9
-      elif x < 4.:
-        return 20
-      else :
-        return 21
+  # def _eval_zone(self, state):
+  #   x = state[0]
+  #   y = state[1]
+  #   if y < 1.:
+  #     if x < 1.:
+  #       return 1
+  #     elif  x < 2.:
+  #       return 2
+  #     elif  x < 3.:
+  #       return 3
+  #     elif  x < 4.:
+  #       return 4
+  #     else:
+  #       return 5
+  #   elif y < 2.:
+  #     if  x > 4.:
+  #       return 6
+  #     elif  x > 3.:
+  #       return 7
+  #     elif x > 2.:
+  #       return 8
+  #     else:
+  #       return 11
+  #   elif y < 3.:
+  #     if x < 1.:
+  #       return 11
+  #     elif x < 2.:
+  #       return 10
+  #     elif x < 3.:
+  #       return 9
+  #     elif x < 4.:
+  #       return 20
+  #     else :
+  #       return 21
 
-    elif y < 4.:
-      if x < 1.:
-        return 12
-      elif x < 2.:
-        return 15
-      elif x < 3.:
-        return 16
-      elif x < 4:
-        return 19
-      else :
-        return 22
-    else:
-      if x < 1.:
-        return 13
-      elif x < 2.:
-        return 14
-      elif x < 3.:
-        return 17
-      elif x < 4:
-        return 18
-      else :
-        return 23
+  #   elif y < 4.:
+  #     if x < 1.:
+  #       return 12
+  #     elif x < 2.:
+  #       return 15
+  #     elif x < 3.:
+  #       return 16
+  #     elif x < 4:
+  #       return 19
+  #     else :
+  #       return 22
+  #   else:
+  #     if x < 1.:
+  #       return 13
+  #     elif x < 2.:
+  #       return 14
+  #     elif x < 3.:
+  #       return 17
+  #     elif x < 4:
+  #       return 18
+  #     else :
+  #       return 23

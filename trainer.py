@@ -39,7 +39,7 @@ flags.DEFINE_integer('num_transitions_rb', 50000,
                      'Number of transitions to fill the rb with.')
 flags.DEFINE_integer('num_demonstrations', 1, 'Number of expert episodes.')
 flags.DEFINE_integer('subsampling', 2, 'Subsampling factor of demonstrations.')
-flags.DEFINE_integer('random_seed', 39, 'Experiment random seed.')
+flags.DEFINE_integer('random_seed', 12, 'Experiment random seed.')
 flags.DEFINE_integer('num_steps_per_iteration', 10000,
                      'Number of training steps per iteration.')
 flags.DEFINE_integer('num_iterations', 100, 'Number of iterations.')
@@ -117,9 +117,9 @@ def main(_):
 
   for it in range(FLAGS.num_iterations):
     print("train")
-    train_trajs = train_loop.run(num_steps=FLAGS.num_steps_per_iteration, it=it)
+    train_trajs, train_trajs_pos = train_loop.run(num_steps=FLAGS.num_steps_per_iteration, it=it)
     print("eval")
-    eval_loop.run(num_episodes=FLAGS.num_eval_episodes,it=it, train_trajs = train_trajs)
+    eval_loop.run(num_episodes=FLAGS.num_eval_episodes,it=it, train_trajs = train_trajs, train_trajs_pos = train_trajs_pos)
 
 if __name__ == '__main__':
   app.run(main)

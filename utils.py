@@ -16,7 +16,7 @@
 """Helper functions for PWIL training script."""
 
 import os
-import pickle
+import pickle5 as pickle
 
 from acme import wrappers
 from acme.tf import networks
