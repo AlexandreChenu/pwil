@@ -56,7 +56,9 @@ FLAGS = flags.FLAGS
 def main(_):
   # Load environment.
   environment = utils.load_environment(FLAGS.env_name)
+  #print("episode lenght = ", environment)
   environment_spec = specs.make_environment_spec(environment)
+  #print("env specs = ", environment_spec)
 
   # Create Rewarder.
   demonstrations = utils.load_demonstrations(

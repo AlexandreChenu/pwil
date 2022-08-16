@@ -129,7 +129,7 @@ class TrainEnvironmentLoop(acme.core.Worker):
         episode_return += timestep.reward
         episode_imitation_return += imitation_reward
         cnt_steps += 1
-      # print("max_zone = ", max_zone)
+      #print("len(trajectory) = ", len(trajectory))
 
       trajectories.append(trajectory)
       trajectories_pos.append(trajectory_pos)
