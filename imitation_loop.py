@@ -342,11 +342,11 @@ class EvalEnvironmentLoop(acme.core.Worker):
       result.update(counts)
 
       self._logger.write(result)
-      for _azim in range(45, 360, 90):
-        ax.view_init(azim=_azim)
-        plt.savefig(self._logdir + "/eval_" + str(it) + "_" + str(_azim) + ".png")
+    for _azim in range(45, 360, 90):
+      ax.view_init(azim=_azim)
+      plt.savefig(self._logdir + "/eval_" + str(it) + "_" + str(_azim) + ".png")
 
-      plt.close(fig)
+    plt.close(fig)
 
 
   # def _eval_zone(self, state):
