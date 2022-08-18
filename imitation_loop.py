@@ -24,9 +24,9 @@ import dm_env
 
 import matplotlib.pyplot as plt
 
-import seaborn
-seaborn.set()
-seaborn.set_style("whitegrid")
+#import seaborn
+#seaborn.set()
+#seaborn.set_style("whitegrid")
 
 
 class TrainEnvironmentLoop(acme.core.Worker):
@@ -312,10 +312,10 @@ class EvalEnvironmentLoop(acme.core.Worker):
 
       self._zone_logfile_eval.write(str(max_zone) + "\n")
 
-      for train_traj in train_trajs:
-        X = [obs_act[0] for obs_act in train_traj_pos]
-        Y = [obs_act[1] for obs_act in train_traj_pos]
-        Z = [obs_act[2] for obs_act in train_traj_pos]
+      for train_traj in train_trajs_pos:
+        X = [obs_act[0] for obs_act in train_traj]
+        Y = [obs_act[1] for obs_act in train_traj]
+        Z = [obs_act[2] for obs_act in train_traj]
         ax.plot(X,Y,Z, color="lightsteelblue",alpha=0.6)
 
       ## save visual logs
