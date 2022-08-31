@@ -33,3 +33,9 @@ register(
     id='HumanoidEnv-v0',
     entry_point='pwil.envs.humanoidenv.humanoidenv:HumanoidEnv',
 )
+
+print("REGISTERING HumanoidStandupEnv-v0 ")
+register(
+    id='HumanoidStandupEnv-v0',
+    entry_point='pwil.envs.humanoid_standup_env.humanoidenv.humanoidenv:HumanoidStandupEnv',
+)
