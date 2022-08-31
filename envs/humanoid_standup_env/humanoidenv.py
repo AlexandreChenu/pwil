@@ -30,9 +30,10 @@ class HumanoidStandupEnv(mujoco_env.MujocoEnv, utils.EzPickle):
 		observation_space = Box(
 			low=-np.inf, high=np.inf, shape=(376,), dtype=np.float64
 		)
+		this_path = os.path.dirname(os.path.abspath(__file__))
 		mujoco_env.MujocoEnv.__init__(
 			self,
-			"/assets/humanoidstandup.xml",
+			this_path + "/assets/humanoidstandup.xml",
 			5
 		)
 		utils.EzPickle.__init__(self)
